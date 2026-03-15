@@ -14,4 +14,4 @@ COPY . .
 
 # Cloud Run injecte la variable d'environnement PORT
 # On utilise 'exec' pour que les signaux système (SIGTERM) soient bien reçus
-CMD exec uvicorn src.main:app --host 0.0.0.0 --port $PORT
+CMD exec uvicorn src.api:app --host 0.0.0.0 --port $PORT
