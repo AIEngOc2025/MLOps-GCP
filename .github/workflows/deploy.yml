@@ -41,23 +41,6 @@ jobs:
     permissions:
       contents: 'read'
       id-token: 'write'
-#jobs:
-  your_job_name:
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout repository
-          uses: actions/checkout@v4
-  
-        - name: Print GitHub OIDC Token Claims
-          # This step will decode the GitHub OIDC token and print its claims.
-          # DO NOT share this output publicly, as it contains sensitive information.
-          run: |
-            TOKEN="${{ secrets.GITHUB_TOKEN }}"
-            echo "$TOKEN" | base64 -d | jq .
-  
-      
-        # ... rest of your workflow
-
 
     steps:
       - name: Checkout code
