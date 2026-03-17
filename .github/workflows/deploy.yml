@@ -46,39 +46,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Authentification Google Cloud
+     # Authentification Google Cloud
       - id: 'auth'
         uses: 'google-github-actions/auth@v2'
         with:
+          token_format: 'access_token' # AJOUT : Nécessaire pour générer le mot de passe Docker
           workload_identity_provider: 'projects/610647369028/locations/global/workloadIdentityPools/credit-score-oc-pool-id/providers/github-provider'
           service_account: '610647369028-compute@developer.gserviceaccount.com'
 
-      - name: 'Docker Auth'
-        uses: 'docker/login/-action@v3'
+      # Connexion à Artifact Registry (Méthode recommandée)
+      - name: 'Login to Artifact Registry'
+        uses: 'docker/login-action@v3'
         with:
-          registry: 'europe-west1-docker.pkg.dev'
+          registry: '${{ env.REGION }}-docker.pkg.dev'
           username: 'oauth2accesstoken'
           password: '${{ steps.auth.outputs.access_token }}'
-      # Configuration Docker pour Artifact Registry
-      - name: Docker Auth
-        run: |
-          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
       # Build et Push de l'image
       - name: Build and Push Image
         run: |
-          IMAGE_URL="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}"
-          docker build -t $IMAGE_URL .
-          docker push $IMAGE_URL
-          # On tague aussi en 'latest' pour référence
-          docker tag $IMAGE_URL ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.SERVICE_NAME }}:latest
-          docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.SERVICE_NAME }}:latest
-
-      # Déploiement sur Cloud Run
-      - name: Deploy to Cloud Run
-        uses: 'google-github-actions/deploy-cloudrun@v2'
-        with:
-          service: ${{ env.SERVICE_NAME }}
-          region: ${{ env.REGION }}
-          image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
-          flags: '--allow-unauthenticated'
+          IMAGE_BASE="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.SERVICE_NAME }}"
+          docker build -t $IMAGE_BASE:${{ github.sha }} -t $IMAGE_BASE:latest .
+          docker push $IMAGE_BASE:${{ github.sha }}
+          docker push $IMAGE_BASE:latest
