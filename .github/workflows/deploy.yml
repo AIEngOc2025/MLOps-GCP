@@ -44,7 +44,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+      - name: "Debug Identity"
+        run: |
+          echo "Repository: ${{ github.repository }}"
+          echo "Actor: ${{ github.actor }}"
       # 🔐 Authentification Google Cloud
       - id: 'auth'
         name: 'Authenticate to Google Cloud'
