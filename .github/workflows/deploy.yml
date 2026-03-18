@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 env:
-  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  PROJECT_ID: 'credit-score-oc'
   REGION: europe-west1
   REPO_NAME: credit-repo
   SERVICE_NAME: credit-score-api
@@ -37,7 +37,6 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     
-    # ADD THESE PERMISSIONS HERE:
     permissions:
       contents: 'read'
       id-token: 'write'
@@ -45,16 +44,21 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-     # Authentification Google Cloud
+      - name: "Debug Identity"
+        run: |
+          echo "Repository: ${{ github.repository }}"
+          echo "Actor: ${{ github.actor }}"
+      # 🔐 Authentification Google Cloud
       - id: 'auth'
+        name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@v2'
         with:
-          token_format: 'access_token' # AJOUT : Nécessaire pour générer le mot de passe Docker
+          # CRITIQUE : Il faut activer cela pour que steps.auth.outputs.access_token existe !
+          token_format: 'access_token' 
           workload_identity_provider: 'projects/610647369028/locations/global/workloadIdentityPools/credit-score-oc-pool-id/providers/github-provider'
           service_account: '610647369028-compute@developer.gserviceaccount.com'
 
-      # Connexion à Artifact Registry (Méthode recommandée)
+      # 📦 Connexion à Artifact Registry
       - name: 'Login to Artifact Registry'
         uses: 'docker/login-action@v3'
         with:
@@ -62,10 +66,19 @@ jobs:
           username: 'oauth2accesstoken'
           password: '${{ steps.auth.outputs.access_token }}'
 
-      # Build et Push de l'image
+      # 🛠 Build et Push de l'image
       - name: Build and Push Image
         run: |
           IMAGE_BASE="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.SERVICE_NAME }}"
           docker build -t $IMAGE_BASE:${{ github.sha }} -t $IMAGE_BASE:latest .
           docker push $IMAGE_BASE:${{ github.sha }}
           docker push $IMAGE_BASE:latest
+
+      # 🚀 Déploiement effectif sur Cloud Run
+      - name: Deploy to Cloud Run
+        uses: 'google-github-actions/deploy-cloudrun@v2'
+        with:
+          service: ${{ env.SERVICE_NAME }}
+          region: ${{ env.REGION }}
+          image: '${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.SERVICE_NAME }}:latest'
+          flags: '--allow-unauthenticated' # À retirer si l'API doit être privée
