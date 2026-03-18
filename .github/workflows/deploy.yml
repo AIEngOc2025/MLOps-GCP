@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 env:
-  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  PROJECT_ID: 'credit-score-oc'
   REGION: europe-west1
   REPO_NAME: credit-repo
   SERVICE_NAME: credit-score-api
