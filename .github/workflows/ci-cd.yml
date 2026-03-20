@@ -10,7 +10,7 @@ on:
 env:
   GCP_PROJECT_ID: 'score-credit-oc'
   GCP_REGION: 'europe-west1' # Change this to your preferred region
-  CLOUD_RUN_SERVICE: 'mlops-gcp-service' # Choose a name for your Cloud Run service
+  CLOUD_RUN_SERVICE: 'mlops-gcp-git' # Choose a name for your Cloud Run service
   ARTIFACT_REGISTRY_REPO: 'mlops-gcp-repo' # Choose a name for your Artifact Registry repo
 
 jobs:
