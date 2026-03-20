@@ -7,10 +7,13 @@ on:
     branches: [ main ]
 
 env:
-  PROJECT_ID: 'credit-score-oc'
-  REGION: europe-west1
-  REPO_NAME: credit-repo
-  SERVICE_NAME: credit-score-api
+  # 1. Remets l'ID projet dans le bon sens (vu sur ta capture IAM)
+  GCP_PROJECT_ID: 'credit-score-oc' 
+  GCP_REGION: 'europe-west1'
+  
+  # 2. Utilise les noms exacts de ta commande gcloud
+  CLOUD_RUN_SERVICE: 'credit-score-api' 
+  ARTIFACT_REGISTRY_REPO: 'credit-repo'
 
 jobs:
   # --- ÉTAPE 1 : TESTS UNITAIRES ---
