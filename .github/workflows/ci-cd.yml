@@ -1,4 +1,4 @@
-i# MLOps-GCP/.github/workflows/ci-cd.yml
+# MLOps-GCP/.github/workflows/ci-cd.yml
 
 name: CI/CD for MLOps-GCP
 
