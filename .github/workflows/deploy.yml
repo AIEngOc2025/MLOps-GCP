@@ -1,87 +1,88 @@
-name: MLOps-GCP — Deployment Pipeline
+# MLOps-GCP/.github/workflows/ci-cd.yml
+name: CI/CD for MLOps-GCP
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches:
+      - main
+    paths-ignore:
+      - 'README.md' # Optionnel : évite de redéployer pour une simple modif de texte
 
 env:
-  # 1. Remets l'ID projet dans le bon sens (vu sur ta capture IAM)
-  GCP_PROJECT_ID: 'credit-score-oc' 
+  GCP_PROJECT_ID: 'credit-score-oc' # CORRIGÉ : l'ID exact de ton projet GCP
   GCP_REGION: 'europe-west1'
-  
-  # 2. Utilise les noms exacts de ta commande gcloud
-  CLOUD_RUN_SERVICE: 'credit-score-api' 
-  ARTIFACT_REGISTRY_REPO: 'credit-repo'
+  CLOUD_RUN_SERVICE: 'mlops-gcp-git'
+  ARTIFACT_REGISTRY_REPO: 'mlops-gcp-repo' 
 
 jobs:
-  # --- ÉTAPE 1 : TESTS UNITAIRES ---
   test:
-    name: 🧪 Run Tests
+    name: Run Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
+      - name: Run tests with pytest
+        run: |
           pip install pytest
-      - name: Run tests
-        run: pytest
+          # Si ton dossier de tests n'existe pas encore, cette étape peut échouer.
+          # Vérifie que tu as bien un dossier nommé 'tests/'
+          pytest tests/
 
-  # --- ÉTAPE 2 : BUILD & DEPLOY SUR GCP ---
   deploy:
-    name: 🚢 Deploy to Cloud Run
+    name: Build and Deploy to Cloud Run
     needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    
     permissions:
       contents: 'read'
       id-token: 'write'
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
-      - name: "Debug Identity"
-        run: |
-          echo "Repository: ${{ github.repository }}"
-          echo "Actor: ${{ github.actor }}"
-      # 🔐 Authentification Google Cloud
-      - id: 'auth'
-        name: 'Authenticate to Google Cloud'
+
+      - name: Authenticate to Google Cloud
+        id: auth
         uses: 'google-github-actions/auth@v2'
         with:
-          # CRITIQUE : Il faut activer cela pour que steps.auth.outputs.access_token existe !
-          token_format: 'access_token' 
-          workload_identity_provider: 'projects/610647369028/locations/global/workloadIdentityPools/credit-score-oc-pool-id/providers/github-provider'
-          service_account: '610647369028-compute@developer.gserviceaccount.com'
+          token_format: 'access_token' # INDISPENSABLE pour le login Docker
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT }}
 
-      # 📦 Connexion à Artifact Registry
-      - name: 'Login to Artifact Registry'
-        uses: 'docker/login-action@v3'
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Login to Artifact Registry
+        uses: docker/login-action@v3
         with:
-          registry: '${{ env.REGION }}-docker.pkg.dev'
-          username: 'oauth2accesstoken'
-          password: '${{ steps.auth.outputs.access_token }}'
+          registry: ${{ env.GCP_REGION }}-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
 
-      # 🛠 Build et Push de l'image
-      - name: Build and Push Image
+      - name: Build and Push Docker Image
+        id: build-and-push
         run: |
-          IMAGE_BASE="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.SERVICE_NAME }}"
-          docker build -t $IMAGE_BASE:${{ github.sha }} -t $IMAGE_BASE:latest .
-          docker push $IMAGE_BASE:${{ github.sha }}
-          docker push $IMAGE_BASE:latest
+          IMAGE_TAG=${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/${{ env.CLOUD_RUN_SERVICE }}:${{ github.sha }}
+          docker build -t $IMAGE_TAG .
+          docker push $IMAGE_TAG
+          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      # 🚀 Déploiement effectif sur Cloud Run
       - name: Deploy to Cloud Run
+        id: deploy
         uses: 'google-github-actions/deploy-cloudrun@v2'
         with:
-          service: ${{ env.SERVICE_NAME }}
-          region: ${{ env.REGION }}
-          image: '${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.SERVICE_NAME }}:latest'
-          flags: '--allow-unauthenticated' # À retirer si l'API doit être privée
+          service: ${{ env.CLOUD_RUN_SERVICE }}
+          region: ${{ env.GCP_REGION }}
+          project_id: ${{ env.GCP_PROJECT_ID }} # FORCE le bon projet ici
+          image: ${{ steps.build-and-push.outputs.image_tag }}
+          flags: '--allow-unauthenticated'
+
+    outputs:
+      service_url: ${{ steps.deploy.outputs.url }}
