@@ -57,6 +57,7 @@ jobs:
           token_format: 'access_token'
           workload_identity_provider: 'projects/610647369028/locations/global/workloadIdentityPools/credit-score-oc-pool-id/providers/github-provider'
           service_account: '610647369028-compute@developer.gserviceaccount.com'
+          project_id: ${{ env.GCP_PROJECT_ID }}
         
 
       - name: Set up Docker
@@ -92,6 +93,7 @@ jobs:
           service: ${{ env.CLOUD_RUN_SERVICE }}
           region: ${{ env.GCP_REGION }}
           image: ${{ steps.build-and-push.outputs.image_tag }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
           flags: '--allow-unauthenticated' # Use if you want the service to be public
 
     outputs:
