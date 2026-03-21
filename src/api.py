@@ -370,7 +370,7 @@ def flush_logs():
 
 
 # ─── INTERFACE GRADIO ─────────────────────────────────────────────────────────
-API_URL = os.getenv("API_URL", "http://127.0.0.1:7860/predict")
+API_URL = os.getenv("API_URL", "http://127.0.0.0:8080/predict")
 
 
 def predict_gradio(ext1, ext2, ext3, credit, annuity, employed, goods, birth, phone, income):
