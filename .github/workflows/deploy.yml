@@ -54,7 +54,7 @@ jobs:
         with:
           token_format: 'access_token' # INDISPENSABLE pour le login Docker
           workload_identity_provider: 'projects/610647369028/locations/global/workloadIdentityPools/credit-score-oc-pool-id/providers/github-provider'
-          service_account: ${{ secrets.SERVICE_ACCOUNT }}
+          service_account: '610647369028-compute@developer.gserviceaccount.com'
 
       - name: Set up Docker
         uses: docker/setup-buildx-action@v3
