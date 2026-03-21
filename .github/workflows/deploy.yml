@@ -53,7 +53,7 @@ jobs:
         uses: 'google-github-actions/auth@v2'
         with:
           token_format: 'access_token' # INDISPENSABLE pour le login Docker
-          workload_identity_provider: 'https://iam.googleapis.com/projects/610647369028/locations/global/workloadIdentityPools/credit-score-oc-pool-id/providers/github-provider'
+          workload_identity_provider: 'projects/610647369028/locations/global/workloadIdentityPools/credit-score-oc-pool-id/providers/github-provider'
           service_account: ${{ secrets.SERVICE_ACCOUNT }}
 
       - name: Set up Docker
