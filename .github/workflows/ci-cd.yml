@@ -8,10 +8,10 @@ on:
       - main
 
 env:
-  GCP_PROJECT_ID: 'score-credit-oc'
+  GCP_PROJECT_ID: 'credit-score-oc'
   GCP_REGION: 'europe-west1' # Change this to your preferred region
   CLOUD_RUN_SERVICE: 'mlops-gcp-git' # Choose a name for your Cloud Run service
-  ARTIFACT_REGISTRY_REPO: 'mlops-gcp-repo' # Choose a name for your Artifact Registry repo
+  ARTIFACT_REGISTRY_REPO: 'cloud-run-source-deploy/aiengoc2025-mlops-gcp' # Choose a name for your Artifact Registry repo
 
 jobs:
   test:
