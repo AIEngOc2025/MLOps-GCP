@@ -2,7 +2,7 @@
 # Dockerfile — Credit Scoring API
 # Build multi-stage : dependencies → test → app
 #
-# ⚠️  Port 7860 imposé par Hugging Face Spaces Docker
+# ⚠️  Port 8080 gcloud run
 #
 # Usage :
 #   Lancer les tests seuls  : docker build --target test .
