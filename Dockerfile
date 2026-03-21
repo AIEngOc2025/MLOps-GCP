@@ -7,7 +7,7 @@
 # Usage :
 #   Lancer les tests seuls  : docker build --target test .
 #   Construire l'image prod : docker build --target app -t credit-api:latest .
-#   Lancer le conteneur     : docker run -p 7860:7860 credit-api:latest
+#   Lancer le conteneur     : docker run -p 808 docker build --target app -t credit-api:latest .0:8080 credit-api:latest
 # ═══════════════════════════════════════════════════════════════════════════════
 
 
