@@ -53,7 +53,7 @@ WORKDIR /app
 COPY models/ ./models/
 COPY src/     ./src/
 
-# ⚠️  Port 8080 obligatoire pour Cloud Run
+# ⚠️  Port 8080 obligatoire pour Hugging Face Spaces Docker
 EXPOSE 8080
 
 # Vérification de santé toutes les 30s
