@@ -54,7 +54,7 @@ COPY models/ ./models/
 COPY src/     ./src/
 
 # ⚠️  Port 7860 obligatoire pour Hugging Face Spaces Docker
-EXPOSE 7860
+EXPOSE 8080
 
 # Vérification de santé toutes les 30s
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
